@@ -12,13 +12,13 @@ Which approach is better and simpler in a particular case is determined by the t
 
 ## Basics
 
-![Klish Client-Server Model](/klish-client-server.en.png "Klish Client-Server Model")
+![Klish Client-Server Model](/docs/klish-client-server.en.png "Klish Client-Server Model")
 
 The klish project uses a client-server model. The listening server klishd loads the command configuration and waits for client requests on a UNIX socket (1). When a client connects, the listening server klishd forks a separate process (2) that will handle one specific client. The forked process is called a "handling klishd server". The listening server klishd continues to wait for new client connections. Interaction between clients and the handling server occurs over UNIX sockets using the specially designed KTP protocol (Klish Transfer Protocol) (3).
 
 The client's task is to transmit operator input to the server and receive the result from it to show the operator. The client does not know what commands exist or how to execute them. Execution is handled by the server side. Since the client has relatively simple code, it is not difficult to implement alternative client programs, for example, a graphical client or a client for automated management. Currently, only the klish command-line text client exists.
 
-![Klish Libraries](/klish-libs.en.png "Klish Libraries")
+![Klish Libraries](/docs/klish-libs.en.png "Klish Libraries")
 
 The foundation of the klish project is the libklish library. The klish client and klishd server are built on it. The library implements all the basic mechanisms of operation and interaction. The library is part of the klish project.
 
@@ -38,7 +38,7 @@ To configure the client parameters, the configuration file `/etc/klish/klish.con
 
 ## Command Configuration Loading
 
-![Command Configuration Loading](/klish-plugin-db.en.png "Command Configuration Loading")
+![Command Configuration Loading](/docs/klish-plugin-db.en.png "Command Configuration Loading")
 
 The internal representation of command configuration in klish is kscheme. Kscheme is a set of C structures representing the entire tree of available user commands, scopes, parameters, etc. All internal work is performed based on these structures - command search, auto-completion, generating hints when interacting with the user.
 
@@ -67,7 +67,7 @@ Klish can only obtain symbols from plugins. Standard symbols are implemented in 
 
 Users can write their own plugins and use custom symbols in klish commands. Installed plugins are located in `/usr/lib` (if configured with --prefix=/usr). Their names are `libklish-plugin-<name>.so`, for example `/usr/lib/libklish-plugin-script.so`.
 
-![Command Execution](/klish-exec.en.png "Command Execution")
+![Command Execution](/docs/klish-exec.en.png "Command Execution")
 
 Symbols can be "synchronous" and "asynchronous". Synchronous symbols are executed in the klishd address space; for asynchronous ones, a separate process is forked.
 
@@ -79,7 +79,7 @@ Lightweight synchronous symbols do not have input and output data streams stdin,
 
 A symbol, or rather a klish command, since a command can consist of several sequentially executed symbols, can be regular or a filter. For simplicity, let's assume that a command executes only one symbol, and therefore we will talk about symbols, not commands. A regular symbol performs some useful action and often produces some text output. A filter receives the result of work, i.e., in this case, the text output of a regular symbol, and processes it. To indicate that a filter should be applied to a regular command, the user uses command chains separated by the "|" character. This is largely analogous to chains in the standard user shell.
 
-![Filters](/klish-filters.en.png "Filters")
+![Filters](/docs/klish-filters.en.png "Filters")
 
 Synchronous symbols do not have an input stream stdin, i.e., they do not receive any input data and therefore cannot be full-fledged filters; they can only be used as the first command in a command chain. Lightweight synchronous symbols do not have an output stream stdout either, so they cannot be used either as filters or as a command in the first place in a command chain because the filter cannot receive any data from them. The typical use of lightweight synchronous symbols is internal service functions that do not interact directly with the user and are not used in command chains.
 
