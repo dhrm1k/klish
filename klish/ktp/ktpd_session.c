@@ -1014,6 +1014,7 @@ static bool_t ktpd_session_process_stdin(ktpd_session_t *ktpd, faux_msg_t *msg)
 	faux_buf_t *bufin = NULL;
 	int fd = -1;
 	bool_t interrupt = BOOL_FALSE;
+	bool_t has_ctrl_c = BOOL_FALSE;
 	const kaction_t *action = NULL;
 
 	assert(ktpd);
@@ -1053,7 +1054,25 @@ static bool_t ktpd_session_process_stdin(ktpd_session_t *ktpd, faux_msg_t *msg)
 		if (cur_len > 0)
 			faux_buf_write(bufin, start, cur_len);
 	} else {
+		// Check if ^C (0x03) is present in the input when interrupt=true
+		if (interrupt && memchr(line, 0x03, len)) {
+			has_ctrl_c = BOOL_TRUE;
+		}
 		faux_buf_write(bufin, line, len);
+	}
+
+	// Send SIGKILL to the process group to terminate child processes
+	// Note: busybox logread ignores SIGINT/SIGTERM, so SIGKILL is required
+	if (has_ctrl_c && ktpd->exec) {
+		kexec_contexts_node_t *iter = kexec_contexts_iter(ktpd->exec);
+		kcontext_t *context = kexec_contexts_each(&iter);
+		if (context) {
+			pid_t session_pid = kcontext_pid(context);
+			if (session_pid > 0) {
+				syslog(LOG_INFO, "klish-sigint: Sending SIGKILL to pgid=-%d", session_pid);
+				kill(-session_pid, SIGKILL);
+			}
+		}
 	}
 
 	stdin_out(fd, bufin, BOOL_FALSE); // Non-blocking write
